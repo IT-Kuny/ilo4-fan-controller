@@ -23,7 +23,8 @@ async function logoutRoute(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const protocol =
-        ((req.headers["x-forwarded-proto"] as string | undefined) || "https")
+        ((req.headers["x-forwarded-proto"] as string | undefined) ||
+            ((req.socket as { encrypted?: boolean }).encrypted ? "https" : "http"))
             .split(",")[0]
             .trim();
     const host = req.headers.host;

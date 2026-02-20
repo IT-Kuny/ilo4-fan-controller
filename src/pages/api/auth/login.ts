@@ -21,6 +21,7 @@ function isRateLimited(ip: string): boolean {
     const record = loginAttempts.get(ip);
 
     if (!record || now > record.resetAt) {
+        loginAttempts.delete(ip);
         return false;
     }
 
@@ -35,6 +36,13 @@ function recordFailedAttempt(ip: string): void {
         loginAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
     } else {
         record.count++;
+    }
+
+    // Clean up expired entries periodically
+    if (loginAttempts.size > 100) {
+        for (const [key, val] of loginAttempts) {
+            if (now > val.resetAt) loginAttempts.delete(key);
+        }
     }
 }
 
