@@ -1,5 +1,6 @@
 import type { GetServerSideProps } from "next";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
 import { Formik, Form } from "formik";
 import toast from "react-hot-toast";
 import { Fade } from "react-awesome-reveal";
@@ -8,6 +9,7 @@ import Fan from "../components/Fan";
 import type { FanObject } from "../types/Fan";
 import { changeFanSpeedSchema } from "../schemas/changeFanSpeed";
 import { fetchFans } from "../lib/iloClient";
+import { withSessionSsr } from "../lib/session";
 
 interface Props {
     fans: FanObject[];
@@ -56,10 +58,16 @@ const Home = ({ fans, fail }: Props): JSX.Element => {
     const [editAll, setEditAll] = useState<boolean>(false);
     const [unlocking, setUnlocking] = useState<boolean>(false);
     const [presetLoading, setPresetLoading] = useState<number>(0);
+    const router = useRouter();
 
     useEffect(() => {
         setBaselineSpeeds(initialFanSpeeds);
     }, [initialFanSpeeds]);
+
+    const handleLogout = async () => {
+        await fetch("/api/auth/logout", { method: "POST" });
+        router.push("/login");
+    };
 
     const handleUnlock = async () => {
         setUnlocking(true);
@@ -112,6 +120,13 @@ const Home = ({ fans, fail }: Props): JSX.Element => {
                         <h1 className="text-xl font-semibold">
                             iLO Fan Controller
                         </h1>
+                        <button
+                            onClick={handleLogout}
+                            className="ml-auto px-4 py-1 text-sm font-medium duration-150 rounded bg-gray-700 hover:bg-gray-600 text-gray-300"
+                            type="button"
+                        >
+                            Logout
+                        </button>
                     </div>
                     <Formik
                         validateOnChange={false}
@@ -289,7 +304,18 @@ const Home = ({ fans, fail }: Props): JSX.Element => {
     );
 };
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getServerSideProps = withSessionSsr(async function ({ req }) {
+    const user = req.session.user;
+
+    if (!user?.isLoggedIn) {
+        return {
+            redirect: {
+                destination: "/login",
+                permanent: false,
+            },
+        };
+    }
+
     try {
         const fans = await fetchFans();
         return {
@@ -304,6 +330,6 @@ export const getServerSideProps: GetServerSideProps = async () => {
             },
         };
     }
-};
+});
 
 export default Home;

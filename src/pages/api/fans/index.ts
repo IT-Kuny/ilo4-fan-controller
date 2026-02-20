@@ -5,6 +5,7 @@ import {
     changeFanSpeedSchema,
     type ChangeFanSpeedInput,
 } from "../../../schemas/changeFanSpeed";
+import { withAuth } from "../../../lib/withAuth";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method === "GET") {
@@ -35,4 +36,4 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(405).json({ message: "Method Not Allowed" });
 };
 
-export default handler;
+export default withAuth(handler);
