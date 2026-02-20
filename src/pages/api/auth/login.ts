@@ -12,6 +12,9 @@ function safeCompare(a: string, b: string): boolean {
     return timingSafeEqual(bufA, bufB);
 }
 
+// NOTE: Rate limiting uses an in-memory store. Limits reset on server restart
+// and are not shared across instances in load-balanced deployments. For
+// multi-instance production environments, replace with a shared store (e.g. Redis).
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes

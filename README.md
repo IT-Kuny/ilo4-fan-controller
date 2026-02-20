@@ -18,12 +18,14 @@
 
 ## Important Information
 
--   There is **no authorization system** put in place, if you plan to expose this publicly, you must use some sort of authentication proxy such as [Authelia](https://github.com/authelia/authelia) which I have a guide for Kubernetes [here](https://github.com/DavidIlie/kubernetes-setup/tree/master/8%20-%20authelia). It wouldn't be fun for someone to put your server fans at 100% whilst you're not home.
+-   A **simple cookie-based login** protects the web UI and all API endpoints. Set `AUTH_USERNAME`, `AUTH_PASSWORD`, and `SESSION_SECRET` (≥ 32 characters) in your environment or `.env` file. Login is rate-limited (5 attempts per IP / 15 min). Note: rate limits are held in memory and reset on server restart; for multi-instance deployments behind a load balancer, add rate limiting at the reverse-proxy level or use a shared store such as Redis.
 
 ## REST API
 
-The controller now exposes a small REST API for automation or scripting:
+The controller now exposes a small REST API for automation or scripting. All endpoints require an authenticated session cookie — log in via the web UI or `POST /api/auth/login` first.
 
+-   `POST /api/auth/login` — authenticate with `{ "username": "...", "password": "..." }`.
+-   `POST /api/auth/logout` — destroy the current session.
 -   `GET /api/fans` — retrieves the current iLO fan data payload.
 -   `POST /api/fans` — sets fan speeds using a JSON body like `{ "fans": [32, 32, 32, 32, 32, 32, 32, 32] }` (values are percentages).
 -   `POST /api/fans/unlock` — unlocks global fan control.
@@ -68,8 +70,11 @@ docker run -d \
   --name=ilo4-fan-controller \
   -p 3000:3000 \
   -e ILO_USERNAME='*your username*' \
-  -e ILO_PASSWORD='*your password**' \
+  -e ILO_PASSWORD='*your password*' \
   -e ILO_HOST='*the ip address you access ILO on*' \
+  -e AUTH_USERNAME='admin' \
+  -e AUTH_PASSWORD='*your strong login password*' \
+  -e SESSION_SECRET='*random string, at least 32 characters*' \
   --restart unless-stopped \
   local/ilo4-fan-controller:latest-local
 ```
@@ -84,6 +89,10 @@ On your desired machine, clone down the repository and make a copy of the `.env.
 ILO_HOST=x.x.x.x.x
 ILO_USERNAME=iasbdliyasiyasd
 ILO_PASSWORD=aosdubaiusldbaisdbiasd
+
+AUTH_USERNAME=admin
+AUTH_PASSWORD=your_strong_password_here
+SESSION_SECRET=random_string_at_least_32_characters_long
 ```
 
 Before you do anything you first need to build the project:

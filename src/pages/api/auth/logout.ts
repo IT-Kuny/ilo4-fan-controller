@@ -22,6 +22,9 @@ async function logoutRoute(req: NextApiRequest, res: NextApiResponse) {
         }
     }
 
+    // Build the expected origin from proxy headers, falling back to the
+    // direct connection. Handles comma-separated x-forwarded-* values that
+    // appear when multiple reverse proxies are chained.
     const forwardedProtoHeader = req.headers["x-forwarded-proto"];
     let protocol: string;
     if (typeof forwardedProtoHeader === "string" && forwardedProtoHeader.length > 0) {
@@ -35,7 +38,12 @@ async function logoutRoute(req: NextApiRequest, res: NextApiResponse) {
             (socket as Record<string, unknown>).encrypted === true;
         protocol = isEncrypted ? "https" : "http";
     }
-    const host = req.headers.host;
+
+    const forwardedHost = req.headers["x-forwarded-host"];
+    const host =
+        (typeof forwardedHost === "string" && forwardedHost.length > 0
+            ? forwardedHost.split(",")[0].trim()
+            : undefined) || req.headers.host;
     const expectedOrigin = host ? `${protocol}://${host}` : null;
 
     if (!requestOrigin || !expectedOrigin || requestOrigin !== expectedOrigin) {
