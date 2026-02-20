@@ -5,6 +5,10 @@ jest.mock("../../../lib/iloClient", () => ({
     unlockFans: jest.fn(),
 }));
 
+jest.mock("../../../lib/withAuth", () => ({
+    withAuth: (handler: any) => handler,
+}));
+
 import { unlockFans } from "../../../lib/iloClient";
 import handler from "../../../pages/api/fans/unlock";
 

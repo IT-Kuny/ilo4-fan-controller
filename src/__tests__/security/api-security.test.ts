@@ -23,6 +23,11 @@ jest.mock("../../lib/iloClient", () => ({
     setFanSpeeds: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock withAuth to pass through the handler directly (bypasses session/auth)
+jest.mock("../../lib/withAuth", () => ({
+    withAuth: (handler: any) => handler,
+}));
+
 import unlockHandler from "../../pages/api/unlock";
 import tempsHandler from "../../pages/api/temps";
 import fansHandler from "../../pages/api/fans/index";
@@ -144,7 +149,7 @@ describe("Security Tests", () => {
     });
 
     describe("Oversized Payload Handling", () => {
-        it("schema rejects extremely large fans array via max value constraint", async () => {
+        it("accepts a large fans array when all values are within bounds", async () => {
             const hugeFans = new Array(10000).fill(50);
             // This should still pass schema validation (the schema doesn't limit array size)
             // but the values are within bounds. This test confirms the schema handles large arrays.

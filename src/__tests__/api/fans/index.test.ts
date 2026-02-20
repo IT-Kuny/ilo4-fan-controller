@@ -6,6 +6,10 @@ jest.mock("../../../lib/iloClient", () => ({
     setFanSpeeds: jest.fn(),
 }));
 
+jest.mock("../../../lib/withAuth", () => ({
+    withAuth: (handler: any) => handler,
+}));
+
 import { fetchFans, setFanSpeeds } from "../../../lib/iloClient";
 import handler from "../../../pages/api/fans/index";
 
