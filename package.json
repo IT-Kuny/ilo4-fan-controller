@@ -9,6 +9,7 @@
         "@emotion/react": "^11.14.0",
         "base-64": "^1.0.0",
         "formik": "^2.4.6",
+        "iron-session": "6.3.1",
         "next": "^14.2.5",
         "node-gyp": "^12.1.0",
         "node-ssh": "^13.2.0",
