@@ -24,16 +24,18 @@ const KNOWN_SESSION_SECRET_PLACEHOLDERS = [
     "complex_password_at_least_32_characters_long",
 ];
 
-if (
-    !process.env.SESSION_SECRET ||
-    process.env.SESSION_SECRET.length < 32 ||
-    KNOWN_SESSION_SECRET_PLACEHOLDERS.includes(process.env.SESSION_SECRET) ||
-    !process.env.AUTH_USERNAME ||
-    !process.env.AUTH_PASSWORD
-) {
-    throw new Error(
-        "Environment variables SESSION_SECRET (at least 32 characters long and not a placeholder value), AUTH_USERNAME, and AUTH_PASSWORD must all be set"
-    );
+function validateEnvironmentVariables() {
+    if (
+        !process.env.SESSION_SECRET ||
+        process.env.SESSION_SECRET.length < 32 ||
+        KNOWN_SESSION_SECRET_PLACEHOLDERS.includes(process.env.SESSION_SECRET) ||
+        !process.env.AUTH_USERNAME ||
+        !process.env.AUTH_PASSWORD
+    ) {
+        throw new Error(
+            "Environment variables SESSION_SECRET (at least 32 characters long and not a placeholder value), AUTH_USERNAME, and AUTH_PASSWORD must all be set"
+        );
+    }
 }
 
 declare module "iron-session" {
@@ -47,6 +49,7 @@ declare module "iron-session" {
 
 export function withSessionRoute(handler: NextApiHandler) {
     return async function (req: NextApiRequest, res: NextApiResponse) {
+        validateEnvironmentVariables();
         req.session = await getIronSession(req, res, sessionOptions);
         return handler(req, res);
     };
@@ -58,6 +61,7 @@ export function withSessionSsr<P extends Record<string, unknown>>(
     ) => GetServerSidePropsResult<P> | Promise<GetServerSidePropsResult<P>>
 ) {
     return async function (context: GetServerSidePropsContext) {
+        validateEnvironmentVariables();
         context.req.session = await getIronSession(
             context.req,
             context.res,
